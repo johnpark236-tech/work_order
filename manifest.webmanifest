@@ -1,0 +1,11 @@
+{
+  "name": "작업오더 · 공수·견적",
+  "short_name": "작업오더",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#16233b",
+  "theme_color": "#16233b",
+  "lang": "ko",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
