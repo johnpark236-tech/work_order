@@ -78,9 +78,10 @@ const O = (k) => state.settings.options[k];
 const proj = (id) => state.projects.find((p) => p.id === id);
 const equip = (p, id) => p?.equipment.find((e) => e.id === id);
 const modu = (e, id) => e?.modules.find((m) => m.id === id);
+const mLabel = (m) => (m ? (m.alias ? `${m.name} (${m.alias})` : m.name) : undefined);
 const pathName = (r) => {
   const p = proj(r.projectId), e = equip(p, r.equipId), m = modu(e, r.moduleId);
-  return [p?.name || '(삭제된 프로젝트)', e?.name, m?.name].filter(Boolean).join(' › ');
+  return [p?.name || '(삭제된 프로젝트)', e?.name, mLabel(m)].filter(Boolean).join(' › ');
 };
 const spec = (r) => r.bolt && r.bolt !== '없음'
   ? `${r.bolt}${r.length ? '×' + r.length : ''}${r.nut !== '없음' ? ' · ' + r.nut : ''}${r.washer !== '없음' ? ' · ' + r.washer : ''}` : '';
@@ -182,7 +183,9 @@ function viewLog() {
     <h2>${d.editId ? '기록 수정' : '작업 기록'} <span class="mute" style="font-weight:500">— 부품명만 입력, 나머지는 선택</span></h2>
     ${fld('프로젝트', chips('projectId', state.projects.map((x) => x.id), d.projectId, { fmt: (id) => proj(id)?.name }))}
     ${fld('설비', chips('equipId', p.equipment.map((x) => x.id), d.equipId, { fmt: (id) => equip(p, id)?.name }))}
-    ${fld('설비 대수', e ? chips('moduleId', e.modules.map((x) => x.id), d.moduleId, { fmt: (id) => modu(e, id)?.name }) : '<span class="mute">설비를 먼저 추가하세요</span>')}
+    ${fld('설비 대수', e ? chips('moduleId', e.modules.map((x) => x.id), d.moduleId, { fmt: (id) => mLabel(modu(e, id)) })
+      + (modu(e, d.moduleId) ? `<div class="alias"><span>${esc(modu(e, d.moduleId).name)} 별칭</span><input type="text" value="${esc(modu(e, d.moduleId).alias || '')}" placeholder="예: 113호기" data-ma="${p.id}|${e.id}|${d.moduleId}" data-live="1" enterkeyhint="done"></div>` : '')
+      : '<span class="mute">설비를 먼저 추가하세요</span>', '별칭은 선택')}
     ${fld('조립체', chips('assembly', O('assemblies'), d.assembly, { optKey: 'assemblies' }))}
     ${fld('공정', chips('process', O('processes'), d.process, { optKey: 'processes' }))}
 
@@ -244,7 +247,7 @@ function recordRows(recs) {
   return [['날짜', '작업자', '프로젝트', '설비', '설비 대수', '조립체', '공정', '부품명', '볼트', '길이(mm)', '너트', '와셔', '공구', '수량', '개당(분)', '인원', '준비(인분)', '검사(인분)', '반복(인분)', '순공수(인분)', '공수(MH)', '대기(분)', '재작업(분)', '접근성', '문제', '상태', '메모'],
     ...recs.map((r) => {
       const p = proj(r.projectId), e = equip(p, r.equipId), m = modu(e, r.moduleId), c = calcRecord(r);
-      return [r.date, r.worker || '', p?.name, e?.name, m?.name, r.assembly, r.process, r.part, r.bolt, r.length ?? '', r.nut, r.washer, r.tool ?? '', r.qty, r.per, r.workers, r.prep, r.inspect, c.repeat, c.net, c.mh, r.wait, r.rework, r.access, r.issue, r.done, r.memo];
+      return [r.date, r.worker || '', p?.name, e?.name, mLabel(m), r.assembly, r.process, r.part, r.bolt, r.length ?? '', r.nut, r.washer, r.tool ?? '', r.qty, r.per, r.workers, r.prep, r.inspect, c.repeat, c.net, c.mh, r.wait, r.rework, r.access, r.issue, r.done, r.memo];
     })];
 }
 
@@ -275,7 +278,8 @@ function viewProjects() {
         ${p.equipment.map((e) => `<div class="eq">
           <div class="row" style="flex-wrap:nowrap"><input type="text" value="${esc(e.name)}" data-ee="${p.id}|${e.id}">
             <button class="btn sm danger" data-act="eq-del" data-p="${p.id}" data-e="${e.id}">${dangerLabel('eq' + e.id, '삭제')}</button></div>
-          ${e.modules.map((m) => `<div class="row" style="flex-wrap:nowrap;margin-top:6px;padding-left:14px"><input type="text" value="${esc(m.name)}" data-me="${p.id}|${e.id}|${m.id}">
+          ${e.modules.map((m) => `<div class="row" style="flex-wrap:nowrap;margin-top:6px;padding-left:14px"><input type="text" style="flex:1 1 0;min-width:0" value="${esc(m.name)}" data-me="${p.id}|${e.id}|${m.id}">
+            <input type="text" style="flex:1.3 1 0;min-width:0;font-weight:500" value="${esc(m.alias || '')}" placeholder="별칭 예:113호기" data-ma="${p.id}|${e.id}|${m.id}">
             <button class="btn sm danger" data-act="mod-del" data-p="${p.id}" data-e="${e.id}" data-m="${m.id}">${dangerLabel('mod' + m.id, '삭제')}</button></div>`).join('')}
           <button class="btn sm" style="margin:8px 0 0 14px" data-act="mod-add" data-p="${p.id}" data-e="${e.id}">＋ 설비 대수 추가</button></div>`).join('')}
         <div class="row" style="margin-top:10px">
@@ -301,7 +305,7 @@ function viewSummary() {
     rows += row('l1', e.name, sumRecords(er));
     for (const m of e.modules) {
       const mr = er.filter((r) => r.moduleId === m.id);
-      rows += row('l2', m.name, sumRecords(mr));
+      rows += row('l2', mLabel(m), sumRecords(mr));
       for (const a of [...new Set(mr.map((r) => r.assembly))]) rows += row('l3', a, sumRecords(mr.filter((r) => r.assembly === a)));
     }
   }
@@ -499,7 +503,8 @@ function viewHelp() {
     <p>부품 <b>한 가지</b>를 조립할 때마다 <b>한 번</b> 적어요.</p>
     ${step(1, '아래 <span class="k">✎ 일지</span>를 눌러요.')}
     ${step(2, '<b>프로젝트 · 설비 · 설비 대수</b>에서 지금 일하는 곳을 눌러요.')}
-    ${step(3, '<b>부품명</b>에 조립한 부품 이름을 써요. <b>글자를 쓰는 곳은 여기 하나뿐</b>이에요.')}
+    <div class="ex">💡 <b>별칭</b>: 1호기, 2호기 바로 아래 칸에 현장에서 부르는 번호를 적을 수 있어요. 예를 들어 <b>113호기</b>라고 적으면 버튼이 <span class="k">1호기 (113호기)</span>로 바뀌어요. 안 적어도 괜찮아요.</div>
+    ${step(3, '<b>부품명</b>에 조립한 부품 이름을 써요. <b>꼭 글자를 써야 하는 곳은 여기 하나뿐</b>이에요.')}
     ${step(4, '<b>볼트</b> 크기를 눌러요. (예: <span class="k">M8</span>) 볼트를 안 썼으면 <span class="k">없음</span>.')}
     ${step(5, '<b>너트</b>를 눌러요. 너트가 없으면 <span class="k">없음</span>.')}
     ${step(6, '<b>체결 수량</b>에서 볼트를 몇 개 조였는지 눌러요.')}
@@ -716,6 +721,10 @@ document.addEventListener('change', (ev) => {
   else if (ds.pe) { const p = proj(ds.pe); p[ds.k] = NUM_F.has(ds.k) ? Number(t.value) || 0 : (t.value.trim() || p[ds.k]); save(); }
   else if (ds.ee) { const [p, e] = ds.ee.split('|'); const x = equip(proj(p), e); x.name = t.value.trim() || x.name; save(); }
   else if (ds.me) { const [p, e, m] = ds.me.split('|'); const x = modu(equip(proj(p), e), m); x.name = t.value.trim() || x.name; save(); }
+  else if (ds.ma) { // 별칭: 비우면 삭제. 일지 화면에서는 선택된 버튼 글자만 바꿔 이어지는 터치가 끊기지 않게 함
+    const [p, e, m] = ds.ma.split('|'); const x = modu(equip(proj(p), e), m); x.alias = t.value.trim(); save();
+    if (ds.live) { const c = document.querySelector('.chip.on[data-f="moduleId"]'); if (c) c.textContent = mLabel(x); }
+  }
   else if (t.id === 'restore' && t.files[0]) {
     t.files[0].text().then((txt) => {
       try { const s = JSON.parse(txt); if (!Array.isArray(s.records) || !Array.isArray(s.projects)) throw 0; localStorage.setItem(KEY, txt); state = load(); render(); toast('백업을 불러왔습니다'); }
@@ -725,7 +734,7 @@ document.addEventListener('change', (ev) => {
 });
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && ev.target.id === 'addinp') ev.target.nextElementSibling.click();
-  if (ev.key === 'Enter' && ev.target.dataset.part) ev.target.blur();
+  if (ev.key === 'Enter' && (ev.target.dataset.part || ev.target.dataset.ma)) ev.target.blur();
 });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -44,7 +44,7 @@ textarea{min-height:70px;resize:vertical}
 .btn{min-height:46px;padding:10px 16px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:700}
 .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
 .btn.navy{background:var(--navy);border-color:var(--navy);color:#fff}
-.btn.sm{min-height:36px;padding:5px 11px;font-size:13px}
+.btn.sm{white-space:nowrap;flex:none;min-height:36px;padding:5px 11px;font-size:13px}
 .btn.danger{color:var(--bad);border-color:#f0c4c2}
 .btn.block{width:100%;font-size:17px;min-height:54px}
 .step{display:flex;gap:6px;align-items:center}
@@ -125,3 +125,7 @@ tr.l2 td:first-child{padding-left:18px} tr.l3 td:first-child{padding-left:32px;c
 .help .word b{color:var(--navy2)}
 .help .k{display:inline-block;border:1.5px solid var(--line);border-radius:8px;padding:0 7px;font-weight:700;background:#fff;white-space:nowrap}
 .help .k.o{background:var(--acc);border-color:var(--acc);color:#fff}
+
+.alias{display:flex;align-items:center;gap:8px;margin-top:8px}
+.alias span{flex:none;font-size:13px;color:var(--mute);font-weight:600}
+.alias input{flex:1;min-width:0;min-height:42px}

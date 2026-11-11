@@ -47,6 +47,19 @@ with sync_playwright() as pw:
     page.click('button[data-act="save-rec"]')
     assert page.locator('.rec').count() == 2
 
+    # 3-1. 별칭: 3호기에 '113호기' 입력 → 버튼·기록에 함께 표시, 비우면 원래대로
+    page.fill('.alias input', '113호기'); page.locator('.alias input').blur()
+    assert page.locator('.chip.on', has_text='3호기 (113호기)').count() == 1, '별칭 버튼 표시'
+    page.reload()
+    assert page.locator('.rec', has_text='3호기 (113호기)').count() == 1, '별칭 기록 표시'
+    page.click('#tabs [data-tab="projects"]'); page.click('button[data-act="proj-open"]')
+    if page.locator('[data-ma]').count() == 0: page.click('button[data-act="proj-open"]')
+    assert page.locator('[data-ma]').count() == 8
+    assert sum(1 for i in page.locator('[data-ma]').all() if i.input_value() == '113호기') == 1
+    assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), '구성 편집 가로 넘침'
+    page.screenshot(path='/tmp/proj.png', full_page=True)
+    page.click('#tabs [data-tab="log"]')
+
     # 4. 저장 후 재접속해도 유지
     page.reload()
     assert page.locator('.rec').count() == 2, '재접속 후 유지'
