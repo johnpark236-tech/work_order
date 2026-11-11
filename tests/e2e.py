@@ -18,7 +18,7 @@ with sync_playwright() as pw:
         page.locator('.fld', has=page.locator('label', has_text=label_text)).first.locator('.chip', has_text=value).first.click()
 
     # 1. 신규 사용자가 프로젝트 생성 (설비 2대 × 모듈 4개 — 3개 고정 아님)
-    page.click('text=프로젝트 만들기')
+    page.click('button.pri:has-text("프로젝트 만들기")')
     page.fill('[data-bind="pform.name"]', '테스트 프로젝트 A')
     page.fill('[data-bind="pform.equipCount"]', '2')
     page.fill('[data-bind="pform.moduleCount"]', '4')
@@ -90,6 +90,14 @@ with sync_playwright() as pw:
     page.locator('.chip.add[data-k="perTimes"]').click()
     page.fill('#addinp', '0.6'); page.click('button[data-act="addok"]')
     assert page.locator('.chip.on', has_text='0.6분').count() == 1
+
+    # 9-1. 사용법 버튼 → 설명서 → 바로가기
+    page.click('.helpbtn')
+    assert page.locator('.help .card').count() >= 8
+    assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), '설명서 가로 넘침'
+    page.screenshot(path='/tmp/help.png', full_page=True)
+    page.click('text=일지 쓰러 가기')
+    assert page.locator('input.part').count() == 1
 
     # 10. 가로 넘침 없음(모바일)
     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), '가로 스크롤 발생'

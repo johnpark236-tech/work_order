@@ -155,7 +155,8 @@ function recHtml(r) {
 function viewLog() {
   if (!state.projects.length) {
     return `<div class="card"><h2>처음 오셨네요</h2><p class="mute">일지를 쓰려면 먼저 프로젝트를 하나 만들어 주세요. 설비·모듈 수만 고르면 구조가 자동으로 만들어집니다.</p>
-      <button class="btn pri block" data-act="tab" data-tab="projects">프로젝트 만들기</button></div>`;
+      <button class="btn pri block" data-act="tab" data-tab="projects">프로젝트 만들기</button>
+      <button class="btn block" style="margin-top:8px" data-act="tab" data-tab="help">❓ 사용법 먼저 보기</button></div>`;
   }
   fixContext();
   const d = state.draft, p = proj(d.projectId), e = equip(p, d.equipId);
@@ -447,6 +448,7 @@ function printEstimate(x) {
 function viewSettings() {
   const s = state.settings;
   return `
+  <div class="card"><button class="btn navy block" data-act="tab" data-tab="help">❓ 사용 설명서 보기</button></div>
   <div class="card"><h2>내 정보</h2>
     ${fld('작업자 이름', `<input type="text" value="${esc(s.worker)}" data-bind="settings.worker">`, '일지·견적서에 표시')}
     ${fld('상호', `<input type="text" value="${esc(s.company)}" data-bind="settings.company">`, '견적서 공급자')}
@@ -466,8 +468,90 @@ function viewSettings() {
   </div>`;
 }
 
+/* ───────── 사용법 ───────── */
+function viewHelp() {
+  const step = (n, t) => `<div class="stepn"><b>${n}</b><div>${t}</div></div>`;
+  const go = (tab, label) => `<button class="btn navy block" style="margin-top:12px" data-act="tab" data-tab="${tab}">${label}</button>`;
+  return `<div class="help">
+  <div class="card"><h2>📘 이 앱은 무엇을 하나요?</h2>
+    <p>오늘 내가 <b>무슨 일을, 몇 개나, 얼마나 걸려서</b> 했는지 적어 두는 <b>일기장</b>이에요.</p>
+    <p>매일 적어 두면 앱이 알아서 더해 주고, 나중에 <b>"이 일은 얼마를 받아야 할까?"</b>도 계산해 줘요.</p>
+    <p>글자는 거의 안 써도 돼요. <b>버튼을 콕콕 누르기만</b> 하면 됩니다.</p></div>
+
+  <div class="card"><h2>👇 화면 맨 아래 버튼 5개</h2>
+    <div class="word"><b>✎ 일지</b> — 오늘 한 일을 적는 곳 (매일 쓰는 곳)</div>
+    <div class="word"><b>▦ 프로젝트</b> — 일하는 곳의 이름을 만드는 곳 (처음에 한 번)</div>
+    <div class="word"><b>Σ 집계</b> — 지금까지 한 일을 모두 더해서 보여 주는 곳</div>
+    <div class="word"><b>₩ 견적</b> — 받을 돈을 계산하는 곳</div>
+    <div class="word"><b>⚙ 설정</b> — 내 이름을 쓰고, 버튼을 고치고, 기록을 보관하는 곳</div></div>
+
+  <div class="card"><h2>1단계 · 처음에 딱 한 번, 프로젝트 만들기</h2>
+    <p>프로젝트는 <b>"이번에 맡은 일의 이름"</b>이에요. 공책에 과목 이름을 쓰는 것과 같아요.</p>
+    ${step(1, '아래 <span class="k">▦ 프로젝트</span>를 눌러요.')}
+    ${step(2, '<b>프로젝트명</b>에 이름을 써요. 내가 알아볼 수 있으면 아무 이름이나 좋아요.')}
+    ${step(3, '<b>설비 수량</b>은 기계가 몇 대인지, <b>설비당 모듈 수</b>는 기계 한 대가 몇 덩어리로 나뉘는지 <span class="k">−</span> <span class="k">＋</span>로 맞춰요.')}
+    ${step(4, '주황색 <span class="k o">프로젝트 만들기</span>를 눌러요. 끝!')}
+    <div class="ex">💡 기계 2대, 한 대에 덩어리 3개라면 → 설비 수량 <b>2</b>, 모듈 수 <b>3</b></div>
+    ${go('projects', '프로젝트 만들러 가기')}</div>
+
+  <div class="card"><h2>2단계 · 매일, 일지 쓰기</h2>
+    <p>부품 <b>한 가지</b>를 조립할 때마다 <b>한 번</b> 적어요.</p>
+    ${step(1, '아래 <span class="k">✎ 일지</span>를 눌러요.')}
+    ${step(2, '<b>프로젝트 · 설비 · 모듈</b>에서 지금 일하는 곳을 눌러요.')}
+    ${step(3, '<b>부품명</b>에 조립한 부품 이름을 써요. <b>글자를 쓰는 곳은 여기 하나뿐</b>이에요.')}
+    ${step(4, '<b>볼트</b> 크기를 눌러요. (예: <span class="k">M8</span>) 볼트를 안 썼으면 <span class="k">없음</span>.')}
+    ${step(5, '<b>너트</b>를 눌러요. 너트가 없으면 <span class="k">없음</span>.')}
+    ${step(6, '<b>체결 수량</b>에서 볼트를 몇 개 조였는지 눌러요.')}
+    ${step(7, '<b>볼트 1개당 조립시간</b>에서 볼트 하나 조이는 데 걸린 시간을 눌러요.')}
+    ${step(8, '<b>작업 인원</b>에서 몇 명이 같이 했는지 눌러요.')}
+    ${step(9, '주황색 <span class="k o">일지에 저장</span>을 눌러요. 끝!')}
+    <div class="ex">💡 <b>계산은 앱이 해 줘요.</b><br>볼트 24개 × 한 개에 0.8분 = <b>19.2분</b><br>저장 버튼 바로 위 남색 상자에 답이 바로 보여요.</div>
+    <div class="ex">💡 원하는 숫자가 버튼에 없으면 줄 끝의 <span class="k">＋</span>를 눌러서 새 버튼을 만들어요. 다음부터는 그 버튼이 계속 나와요.</div>
+    <div class="ex">💡 전에 썼던 부품 이름을 또 쓰면, 그때 골랐던 것들이 <b>저절로</b> 골라져요.</div>
+    ${go('log', '일지 쓰러 가기')}</div>
+
+  <div class="card"><h2>일지에서 더 고를 수 있는 것</h2>
+    <p>몰라도 괜찮아요. 안 누르면 0으로 계산돼요.</p>
+    <div class="word"><b>준비시간</b> — 공구와 부품을 챙기는 데 걸린 시간</div>
+    <div class="word"><b>검사시간</b> — 잘 됐는지 확인하는 데 걸린 시간</div>
+    <div class="word"><b>대기시간</b> — 일을 못 하고 기다린 시간</div>
+    <div class="word"><b>재작업시간</b> — 잘못돼서 다시 한 시간</div>
+    <div class="word"><b>날짜 ◀ ▶</b> — 어제나 다른 날 일지를 볼 때 눌러요. <span class="k">오늘</span>을 누르면 오늘로 돌아와요.</div>
+    <div class="word"><b>수정 · 삭제</b> — 잘못 적었으면 아래 목록에서 <span class="k">수정</span>을 눌러요. <span class="k">삭제</span>는 실수로 지우지 않게 <b>두 번</b> 눌러야 지워져요.</div></div>
+
+  <div class="card"><h2>3단계 · 얼마나 했는지 보기</h2>
+    ${step(1, '아래 <span class="k">Σ 집계</span>를 눌러요.')}
+    ${step(2, '기계별, 덩어리(모듈)별로 일한 시간이 <b>저절로 더해져</b> 있어요.')}
+    <p>일지를 많이 쓸수록 "볼트 하나에 보통 몇 분 걸리는지"를 앱이 더 정확하게 알려 줘요.</p></div>
+
+  <div class="card"><h2>4단계 · 받을 돈 계산하기</h2>
+    ${step(1, '아래 <span class="k">₩ 견적</span>을 눌러요.')}
+    ${step(2, '<span class="k">실측값 채우기</span>를 누르면 일지에 적은 시간이 자동으로 들어가요.')}
+    ${step(3, '<b>노무 일당</b>(하루 일한 값)과 <b>목표 이익률</b>(남기고 싶은 만큼)을 눌러요.')}
+    ${step(4, '<b>권장 견적가격</b>이 바로 나와요. 이 값이 "이만큼 받으면 좋아요"라는 뜻이에요.')}
+    ${step(5, '<span class="k o">견적 저장</span>을 누른 뒤 <span class="k">견적서 PDF·인쇄</span>를 누르면 종이로 뽑을 수 있어요.')}</div>
+
+  <div class="card"><h2>📖 어려운 낱말 풀이</h2>
+    <div class="word"><b>설비</b> — 기계 한 대</div>
+    <div class="word"><b>모듈</b> — 기계를 이루는 큰 덩어리</div>
+    <div class="word"><b>조립체</b> — 덩어리 안의 작은 묶음</div>
+    <div class="word"><b>체결</b> — 볼트를 돌려서 꽉 조이는 것</div>
+    <div class="word"><b>인분</b> — 한 사람이 1분 동안 하는 일. 2명이 10분 일하면 20인분이에요.</div>
+    <div class="word"><b>MH</b> — 한 사람이 1시간 동안 하는 일. 60인분 = 1MH예요.</div>
+    <div class="word"><b>공수</b> — 일을 끝내는 데 든 사람의 시간</div>
+    <div class="word"><b>견적</b> — "이 일은 이만큼 받겠습니다" 하고 미리 알려 주는 값</div>
+    <div class="word"><b>원가</b> — 일을 하는 데 실제로 드는 돈</div></div>
+
+  <div class="card"><h2>⚠️ 꼭 기억하세요</h2>
+    <p><b>적은 내용은 이 휴대폰 안에만 저장돼요.</b> 휴대폰을 바꾸거나 인터넷 기록을 지우면 사라질 수 있어요.</p>
+    <p>가끔 <span class="k">⚙ 설정</span> → <span class="k">백업 파일 받기</span>를 눌러서 보관해 두세요. 숙제를 가방에 한 번 더 챙기는 것과 같아요.</p>
+    <p>사진을 찍거나 녹음하면 안 되는 곳에서는 <b>회사 규칙을 먼저</b> 지켜요.</p>
+    ${go('settings', '설정으로 가기')}</div>
+  </div>`;
+}
+
 /* ───────── 렌더 ───────── */
-const VIEWS = { log: viewLog, projects: viewProjects, summary: viewSummary, estimate: viewEstimate, settings: viewSettings };
+const VIEWS = { log: viewLog, projects: viewProjects, summary: viewSummary, estimate: viewEstimate, settings: viewSettings, help: viewHelp };
 function header() {
   const s = sumRecords(state.records.filter((r) => r.date === today()));
   $('#today-mh').innerHTML = `오늘<b>${f1(s.mh)} MH</b>`;

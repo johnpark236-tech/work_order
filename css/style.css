@@ -112,3 +112,16 @@ tr.l2 td:first-child{padding-left:18px} tr.l3 td:first-child{padding-left:32px;c
   #print .meta td{text-align:left}
   #print p{margin:3px 0;white-space:pre-wrap}
 }
+
+.top-right{display:flex;align-items:center;gap:10px}
+.helpbtn{min-height:40px;padding:6px 12px;border-radius:999px;border:0;background:#fff;color:var(--navy);font-weight:800;font-size:14px;white-space:nowrap}
+.help h2{font-size:19px}
+.help p{margin:6px 0;font-size:16.5px;line-height:1.65}
+.help .stepn{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.help .stepn>b{flex:0 0 34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:17px}
+.help .stepn>div{font-size:16.5px;line-height:1.6}
+.help .ex{background:var(--acc-soft);border-radius:11px;padding:10px 12px;margin:8px 0;font-size:16px;line-height:1.6}
+.help .word{border-top:1px solid var(--line);padding:9px 0;font-size:16px;line-height:1.55}
+.help .word b{color:var(--navy2)}
+.help .k{display:inline-block;border:1.5px solid var(--line);border-radius:8px;padding:0 7px;font-weight:700;background:#fff;white-space:nowrap}
+.help .k.o{background:var(--acc);border-color:var(--acc);color:#fff}

@@ -1,5 +1,5 @@
 // 통신이 불안정한 현장에서도 열리도록: 온라인이면 최신 파일, 끊기면 저장본 사용
-const CACHE = 'work-order-v1';
+const CACHE = 'work-order-v2';
 const FILES = ['./', 'index.html', 'css/style.css', 'js/app.js', 'js/calc.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
