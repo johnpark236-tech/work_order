@@ -54,6 +54,7 @@ function load() {
   s.settings.eff ||= { 1: 1, 2: 0.9, 3: 0.85, 4: 0.8, 5: 0.75, 6: 0.7 };
   s.settings.options = { ...structuredClone(DEFAULT_OPTIONS), ...(s.settings.options || {}) };
   s.projects ||= []; s.records ||= []; s.estimates ||= [];
+  for (const p of s.projects) for (const e of p.equipment) for (const m of e.modules) m.name = m.name.replace(/^모듈 (\d+)$/, '$1호기');
   s.draft = { ...newDraft(), ...(s.draft || {}) };
   s.est = { ...newEst(), ...(s.est || {}) };
   return s;
@@ -154,7 +155,7 @@ function recHtml(r) {
 
 function viewLog() {
   if (!state.projects.length) {
-    return `<div class="card"><h2>처음 오셨네요</h2><p class="mute">일지를 쓰려면 먼저 프로젝트를 하나 만들어 주세요. 설비·모듈 수만 고르면 구조가 자동으로 만들어집니다.</p>
+    return `<div class="card"><h2>처음 오셨네요</h2><p class="mute">일지를 쓰려면 먼저 프로젝트를 하나 만들어 주세요. 설비 수량과 설비 대수만 고르면 구조가 자동으로 만들어집니다.</p>
       <button class="btn pri block" data-act="tab" data-tab="projects">프로젝트 만들기</button>
       <button class="btn block" style="margin-top:8px" data-act="tab" data-tab="help">❓ 사용법 먼저 보기</button></div>`;
   }
@@ -181,7 +182,7 @@ function viewLog() {
     <h2>${d.editId ? '기록 수정' : '작업 기록'} <span class="mute" style="font-weight:500">— 부품명만 입력, 나머지는 선택</span></h2>
     ${fld('프로젝트', chips('projectId', state.projects.map((x) => x.id), d.projectId, { fmt: (id) => proj(id)?.name }))}
     ${fld('설비', chips('equipId', p.equipment.map((x) => x.id), d.equipId, { fmt: (id) => equip(p, id)?.name }))}
-    ${fld('모듈', e ? chips('moduleId', e.modules.map((x) => x.id), d.moduleId, { fmt: (id) => modu(e, id)?.name }) : '<span class="mute">설비를 먼저 추가하세요</span>')}
+    ${fld('설비 대수', e ? chips('moduleId', e.modules.map((x) => x.id), d.moduleId, { fmt: (id) => modu(e, id)?.name }) : '<span class="mute">설비를 먼저 추가하세요</span>')}
     ${fld('조립체', chips('assembly', O('assemblies'), d.assembly, { optKey: 'assemblies' }))}
     ${fld('공정', chips('process', O('processes'), d.process, { optKey: 'processes' }))}
 
@@ -240,7 +241,7 @@ function dayText(date) {
     `합계: ${s.net}인분 = ${s.mh}MH / 대기·재작업 ${round2(s.waitPM + s.reworkPM)}인분`].join('\n');
 }
 function recordRows(recs) {
-  return [['날짜', '작업자', '프로젝트', '설비', '모듈', '조립체', '공정', '부품명', '볼트', '길이(mm)', '너트', '와셔', '공구', '수량', '개당(분)', '인원', '준비(인분)', '검사(인분)', '반복(인분)', '순공수(인분)', '공수(MH)', '대기(분)', '재작업(분)', '접근성', '문제', '상태', '메모'],
+  return [['날짜', '작업자', '프로젝트', '설비', '설비 대수', '조립체', '공정', '부품명', '볼트', '길이(mm)', '너트', '와셔', '공구', '수량', '개당(분)', '인원', '준비(인분)', '검사(인분)', '반복(인분)', '순공수(인분)', '공수(MH)', '대기(분)', '재작업(분)', '접근성', '문제', '상태', '메모'],
     ...recs.map((r) => {
       const p = proj(r.projectId), e = equip(p, r.equipId), m = modu(e, r.moduleId), c = calcRecord(r);
       return [r.date, r.worker || '', p?.name, e?.name, m?.name, r.assembly, r.process, r.part, r.bolt, r.length ?? '', r.nut, r.washer, r.tool ?? '', r.qty, r.per, r.workers, r.prep, r.inspect, c.repeat, c.net, c.mh, r.wait, r.rework, r.access, r.issue, r.done, r.memo];
@@ -255,7 +256,7 @@ function viewProjects() {
     ${fld('프로젝트명', `<input type="text" value="${esc(f.name)}" placeholder="내 작업공간에서만 보이는 이름" data-bind="pform.name">`)}
     ${fld('관리번호', `<input type="text" value="${esc(f.code)}" placeholder="선택" data-bind="pform.code">`, '선택')}
     ${fld('설비 유형', chips('type', O('equipTypes'), f.type, { root: 'pform', optKey: 'equipTypes' }))}
-    <div class="grid2">${fld('설비 수량', stepper('equipCount', f.equipCount, 'pform'), '대')}${fld('설비당 모듈 수', stepper('moduleCount', f.moduleCount, 'pform'), '개')}</div>
+    <div class="grid2">${fld('설비 수량', stepper('equipCount', f.equipCount, 'pform'), '대')}${fld('설비 대수', stepper('moduleCount', f.moduleCount, 'pform'), '대')}</div>
     <div class="grid2">${fld('시작일', `<input type="date" value="${f.start}" data-bind="pform.start">`)}${fld('목표 완료일', `<input type="date" value="${f.due}" data-bind="pform.due">`)}</div>
     <div class="grid2">${fld('계약 예정금액', money('contract', f.contract, 'pform'), '원')}${fld('목표 원가', money('targetCost', f.targetCost, 'pform'), '원')}</div>
     <button class="btn pri block" style="margin-top:14px" data-act="proj-create">프로젝트 만들기</button>
@@ -265,7 +266,7 @@ function viewProjects() {
     const open = ui.open === p.id;
     return `<div class="card">
       <div class="row between"><div><b style="font-size:17px">${esc(p.name)}</b> <span class="tag ${p.status === '완료' ? 'ok' : ''}">${esc(p.status)}</span>
-        <div class="mute">${esc(p.code || '')} ${esc(p.type)} · 설비 ${p.equipment.length}대 · 모듈 ${p.equipment.reduce((a, e) => a + e.modules.length, 0)}개 · 실적 ${f1(s.mh)} MH</div></div>
+        <div class="mute">${esc(p.code || '')} ${esc(p.type)} · 설비 ${p.equipment.length}대 · 설비 대수 ${p.equipment.reduce((a, e) => a + e.modules.length, 0)}대 · 실적 ${f1(s.mh)} MH</div></div>
         <button class="btn sm" data-act="proj-open" data-id="${p.id}">${open ? '접기' : '구성 편집'}</button></div>
       ${open ? `<div class="tree">
         ${fld('프로젝트명', `<input type="text" value="${esc(p.name)}" data-pe="${p.id}" data-k="name">`)}
@@ -276,7 +277,7 @@ function viewProjects() {
             <button class="btn sm danger" data-act="eq-del" data-p="${p.id}" data-e="${e.id}">${dangerLabel('eq' + e.id, '삭제')}</button></div>
           ${e.modules.map((m) => `<div class="row" style="flex-wrap:nowrap;margin-top:6px;padding-left:14px"><input type="text" value="${esc(m.name)}" data-me="${p.id}|${e.id}|${m.id}">
             <button class="btn sm danger" data-act="mod-del" data-p="${p.id}" data-e="${e.id}" data-m="${m.id}">${dangerLabel('mod' + m.id, '삭제')}</button></div>`).join('')}
-          <button class="btn sm" style="margin:8px 0 0 14px" data-act="mod-add" data-p="${p.id}" data-e="${e.id}">＋ 모듈 추가</button></div>`).join('')}
+          <button class="btn sm" style="margin:8px 0 0 14px" data-act="mod-add" data-p="${p.id}" data-e="${e.id}">＋ 설비 대수 추가</button></div>`).join('')}
         <div class="row" style="margin-top:10px">
           <button class="btn sm navy" data-act="eq-add" data-p="${p.id}">＋ 설비 추가</button>
           <button class="btn sm" data-act="proj-dup" data-id="${p.id}">구성 복제(템플릿)</button>
@@ -285,7 +286,7 @@ function viewProjects() {
     </div>`;
   }).join('')}`;
 }
-const mkModules = (n) => Array.from({ length: n }, (_, i) => ({ id: uid(), name: `모듈 ${i + 1}` }));
+const mkModules = (n) => Array.from({ length: n }, (_, i) => ({ id: uid(), name: `${i + 1}호기` }));
 
 /* ───────── 집계 ───────── */
 function viewSummary() {
@@ -316,9 +317,9 @@ function viewSummary() {
       <div class="kpi"><span>순공수</span><b>${f1(all.net)}인분</b></div>
       <div class="kpi"><span>대기 손실</span><b>${f1(all.waitPM / 60)} MH</b></div>
       <div class="kpi"><span>재작업 손실</span><b>${f1(all.reworkPM / 60)} MH</b></div>
-      <div class="kpi"><span>기록된 모듈</span><b>${touched} / ${done}</b></div>
+      <div class="kpi"><span>기록된 설비 대수</span><b>${touched} / ${done}</b></div>
     </div></div>
-  <div class="card"><h2>설비 › 모듈 › 조립체 집계</h2><div class="scroll"><table>
+  <div class="card"><h2>설비 › 설비 대수 › 조립체 집계</h2><div class="scroll"><table>
     <tr><th>구분</th><th>건수</th><th>인분</th><th>MH</th><th>손실 MH</th></tr>${rows}</table></div>
     <p class="hint">아래 단계의 합이 위 단계와 항상 일치합니다. 손실 = 대기 + 재작업(순공수와 별도).</p></div>
   <div class="card"><h2>공정별</h2><div class="scroll"><table><tr><th>공정</th><th>건수</th><th>인분</th><th>MH</th></tr>
@@ -489,15 +490,15 @@ function viewHelp() {
     <p>프로젝트는 <b>"이번에 맡은 일의 이름"</b>이에요. 공책에 과목 이름을 쓰는 것과 같아요.</p>
     ${step(1, '아래 <span class="k">▦ 프로젝트</span>를 눌러요.')}
     ${step(2, '<b>프로젝트명</b>에 이름을 써요. 내가 알아볼 수 있으면 아무 이름이나 좋아요.')}
-    ${step(3, '<b>설비 수량</b>은 기계가 몇 대인지, <b>설비당 모듈 수</b>는 기계 한 대가 몇 덩어리로 나뉘는지 <span class="k">−</span> <span class="k">＋</span>로 맞춰요.')}
+    ${step(3, '<b>설비 수량</b>은 기계가 몇 가지인지, <b>설비 대수</b>는 그 기계가 몇 대씩 있는지 <span class="k">−</span> <span class="k">＋</span>로 맞춰요.')}
     ${step(4, '주황색 <span class="k o">프로젝트 만들기</span>를 눌러요. 끝!')}
-    <div class="ex">💡 기계 2대, 한 대에 덩어리 3개라면 → 설비 수량 <b>2</b>, 모듈 수 <b>3</b></div>
+    <div class="ex">💡 기계가 2가지이고, 한 가지마다 3대씩 있다면 → 설비 수량 <b>2</b>, 설비 대수 <b>3</b></div>
     ${go('projects', '프로젝트 만들러 가기')}</div>
 
   <div class="card"><h2>2단계 · 매일, 일지 쓰기</h2>
     <p>부품 <b>한 가지</b>를 조립할 때마다 <b>한 번</b> 적어요.</p>
     ${step(1, '아래 <span class="k">✎ 일지</span>를 눌러요.')}
-    ${step(2, '<b>프로젝트 · 설비 · 모듈</b>에서 지금 일하는 곳을 눌러요.')}
+    ${step(2, '<b>프로젝트 · 설비 · 설비 대수</b>에서 지금 일하는 곳을 눌러요.')}
     ${step(3, '<b>부품명</b>에 조립한 부품 이름을 써요. <b>글자를 쓰는 곳은 여기 하나뿐</b>이에요.')}
     ${step(4, '<b>볼트</b> 크기를 눌러요. (예: <span class="k">M8</span>) 볼트를 안 썼으면 <span class="k">없음</span>.')}
     ${step(5, '<b>너트</b>를 눌러요. 너트가 없으면 <span class="k">없음</span>.')}
@@ -521,7 +522,7 @@ function viewHelp() {
 
   <div class="card"><h2>3단계 · 얼마나 했는지 보기</h2>
     ${step(1, '아래 <span class="k">Σ 집계</span>를 눌러요.')}
-    ${step(2, '기계별, 덩어리(모듈)별로 일한 시간이 <b>저절로 더해져</b> 있어요.')}
+    ${step(2, '설비별, 설비 대수(1호기, 2호기…)별로 일한 시간이 <b>저절로 더해져</b> 있어요.')}
     <p>일지를 많이 쓸수록 "볼트 하나에 보통 몇 분 걸리는지"를 앱이 더 정확하게 알려 줘요.</p></div>
 
   <div class="card"><h2>4단계 · 받을 돈 계산하기</h2>
@@ -532,9 +533,9 @@ function viewHelp() {
     ${step(5, '<span class="k o">견적 저장</span>을 누른 뒤 <span class="k">견적서 PDF·인쇄</span>를 누르면 종이로 뽑을 수 있어요.')}</div>
 
   <div class="card"><h2>📖 어려운 낱말 풀이</h2>
-    <div class="word"><b>설비</b> — 기계 한 대</div>
-    <div class="word"><b>모듈</b> — 기계를 이루는 큰 덩어리</div>
-    <div class="word"><b>조립체</b> — 덩어리 안의 작은 묶음</div>
+    <div class="word"><b>설비</b> — 기계</div>
+    <div class="word"><b>설비 대수</b> — 같은 기계가 여러 대 있을 때 몇 번째 기계인지 (1호기, 2호기…)</div>
+    <div class="word"><b>조립체</b> — 기계 안에서 부품을 모아 놓은 작은 묶음</div>
     <div class="word"><b>체결</b> — 볼트를 돌려서 꽉 조이는 것</div>
     <div class="word"><b>인분</b> — 한 사람이 1분 동안 하는 일. 2명이 10분 일하면 20인분이에요.</div>
     <div class="word"><b>MH</b> — 한 사람이 1시간 동안 하는 일. 60인분 = 1MH예요.</div>
@@ -600,7 +601,7 @@ const ACT = {
     const d = state.draft;
     d.part = (d.part || '').trim();
     if (!d.part) { toast('부품명을 입력해 주세요'); $('input.part')?.focus(); return false; }
-    if (!d.moduleId) { toast('설비와 모듈을 선택해 주세요'); return false; }
+    if (!d.moduleId) { toast('설비와 설비 대수를 선택해 주세요'); return false; }
     const { editId, ...data } = d, now = new Date().toISOString();
     if (editId) Object.assign(state.records.find((r) => r.id === editId), data, { updatedAt: now });
     else state.records.push({ ...data, id: uid(), worker: state.settings.worker, createdAt: now, updatedAt: now });
@@ -643,7 +644,7 @@ const ACT = {
     const s = proj(d.id);
     const p = { ...s, id: uid(), name: s.name + ' (복제)', status: '준비', createdAt: new Date().toISOString(),
       equipment: s.equipment.map((e) => ({ id: uid(), name: e.name, modules: e.modules.map((m) => ({ id: uid(), name: m.name })) })) };
-    state.projects.push(p); ui.open = p.id; toast('설비·모듈 구성을 복제했습니다');
+    state.projects.push(p); ui.open = p.id; toast('설비 구성을 복제했습니다');
   },
   'proj-del': (d) => twoStep('proj' + d.id, () => {
     state.projects = state.projects.filter((p) => p.id !== d.id); state.records = state.records.filter((r) => r.projectId !== d.id);
@@ -654,9 +655,9 @@ const ACT = {
     if (state.records.some((r) => r.equipId === d.e)) { toast('작업기록이 있는 설비는 삭제할 수 없습니다'); return false; }
     return twoStep('eq' + d.e, () => { const p = proj(d.p); p.equipment = p.equipment.filter((e) => e.id !== d.e); });
   },
-  'mod-add': (d) => { const e = equip(proj(d.p), d.e); e.modules.push({ id: uid(), name: `모듈 ${e.modules.length + 1}` }); },
+  'mod-add': (d) => { const e = equip(proj(d.p), d.e); e.modules.push({ id: uid(), name: `${e.modules.length + 1}호기` }); },
   'mod-del': (d) => {
-    if (state.records.some((r) => r.moduleId === d.m)) { toast('작업기록이 있는 모듈은 삭제할 수 없습니다'); return false; }
+    if (state.records.some((r) => r.moduleId === d.m)) { toast('작업기록이 있는 설비 대수는 삭제할 수 없습니다'); return false; }
     return twoStep('mod' + d.m, () => { const e = equip(proj(d.p), d.e); e.modules = e.modules.filter((m) => m.id !== d.m); });
   },
 

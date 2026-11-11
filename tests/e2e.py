@@ -17,13 +17,13 @@ with sync_playwright() as pw:
     def chip(label_text, value):
         page.locator('.fld', has=page.locator('label', has_text=label_text)).first.locator('.chip', has_text=value).first.click()
 
-    # 1. 신규 사용자가 프로젝트 생성 (설비 2대 × 모듈 4개 — 3개 고정 아님)
+    # 1. 신규 사용자가 프로젝트 생성 (설비 2 × 설비 대수 4 — 3개 고정 아님)
     page.click('button.pri:has-text("프로젝트 만들기")')
     page.fill('[data-bind="pform.name"]', '테스트 프로젝트 A')
     page.fill('[data-bind="pform.equipCount"]', '2')
     page.fill('[data-bind="pform.moduleCount"]', '4')
     page.click('button[data-act="proj-create"]')
-    assert page.locator('text=설비 2대 · 모듈 8개').count() == 1, '설비/모듈 생성'
+    assert page.locator('text=설비 2대 · 설비 대수 8대').count() == 1, '설비/설비 대수 생성'
 
     # 2. 일지: 부품명만 입력, 나머지 선택 — 24개 × 0.8분 + 준비 12 + 검사 6
     page.click('#tabs [data-tab="log"]')
@@ -38,8 +38,8 @@ with sync_playwright() as pw:
     page.click('button[data-act="save-rec"]')
     assert page.locator('.rec').count() == 1
 
-    # 3. 두 번째 기록: 다른 설비·모듈, 같은 부품명 → 지난 선택값 자동 불러오기
-    chip('설비', '설비 2'); chip('모듈', '모듈 3')
+    # 3. 두 번째 기록: 다른 설비·설비 대수, 같은 부품명 → 지난 선택값 자동 불러오기
+    chip('설비', '설비 2'); chip('설비 대수', '3호기')
     page.fill('input.part', '센서 브래킷'); page.locator('input.part').blur()
     assert page.locator('text=선택값을 불러왔습니다').count() == 1, '자동 불러오기'
     assert page.inner_text('#live-net') == '37.2인분'
@@ -51,7 +51,7 @@ with sync_playwright() as pw:
     page.reload()
     assert page.locator('.rec').count() == 2, '재접속 후 유지'
 
-    # 5. 집계: 프로젝트 = 설비 합 = 모듈 합  (37.2 + 26 = 63.2인분)
+    # 5. 집계: 프로젝트 = 설비 합 = 설비 대수 합  (37.2 + 26 = 63.2인분)
     page.click('#tabs [data-tab="summary"]')
     rows = page.locator('table').first.locator('tr')
     val = lambda cls: [float(r.locator('td').nth(2).inner_text()) for r in rows.all() if cls in (r.get_attribute('class') or '')]
